@@ -1,0 +1,12 @@
+import requests
+
+url = 'https://gimg3.baidu.com/topone/src=https%3A%2F%2Fbkimg.cdn.bcebos.com%2Fpic%2Fc83d70cf3bc79f3df8dc58c0a5f7da11728b461083bf%3Fx-bce-process%3Dimage%2Fresize%2Cm_pad%2Cw_348%2Ch_348%2Ccolor_ffffff&refer=http%3A%2F%2Fwww.baidu.com&app=2011&size=f200,200&n=0&g=0n&er=404&q=75&fmt=auto&maxorilen2heic=2000000?sec=1690390800&t=2f28adae37d2526985fa4b84e26e2db4'
+
+headers = {
+   'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
+}
+
+response = requests.get(url=url)
+content = response.content
+with open('./quitu.jpg','wb') as f:
+    f.write(content)

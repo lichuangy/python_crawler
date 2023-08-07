@@ -1,0 +1,237 @@
+$(document).ready(function() {
+	
+	$('#top-search-value, #st-value, #top-search-mobile-value').keydown(function(event) {
+		if (event.keyCode == 13) {
+	    	var v =  $(event.target).val();
+			doSearch(v);
+	    }
+	});
+
+	$('.check-more').each(function() {
+		var obj = $(this);
+		if (obj.height() > 350) {
+			obj.addClass('has-read-more');
+			obj.append('<div class="read-more"></div>');
+			obj.after('<div class="more-btn"><a>展开阅读全文 ∨</a></div>');
+		}
+	});
+});
+
+$(document).on("click", ".more-btn", function() {
+	$(this).prev().removeClass('has-read-more');
+	$(this).prev().find('read-more').remove();
+	$(this).remove();
+});
+$(document).on('click', '#st, #top-search, #top-search-mobile', function(e) {
+	var event = window.event || e;
+	var target = $(e.target);
+	var v = $('#' + target.attr('id') + '-value').val();
+	doSearch(v);
+	
+});
+
+function doSearch(v) {
+	if (!v) {
+		return;
+	}
+	v = v.replace(/[^\u4e00-\u9fa5,^\s]+/g, ''); 
+	v = v.replace(/[\s+]+/g, ' ');
+	v = v.replace(' ', '+');
+	if (v.length <= 0) {
+		return;
+	}
+	window.location.href = '/chaxun/all/' + v;
+}
+
+// 当页面加载完成后触发该函数
+window.onload = function () {
+
+    // e.preventDefault()  ===    阻止默认事件
+
+    // 当一个手指放在屏幕上时，会触发 touchstart 事件。如 果另一个手指又放在了屏幕上，则会先触发 gesturestart 事件
+    document.addEventListener('gesturestart', function (e) {
+        e.preventDefault();
+    });
+
+    // 在单个元素上单击两次 ===  dblclick
+    document.addEventListener('dblclick', function (e) {
+        e.preventDefault();
+    });
+
+    // 一个手指放在屏幕上时，会触发 touchstart 事件
+    document.addEventListener('touchstart', function (event) {
+        if (event.touches.length > 1) {
+            event.preventDefault();
+        }
+    });
+
+    // 如果一个或两个手指在屏幕上滑动，将会触发 gesturechange 事件。
+    // 但只要有一个手指移开， 就会触发 gestureend 事件，紧接着又会触发基于该手指的 touchend 事件。
+    var lastTouchEnd = 0;
+       document.addEventListener('touchend', function (event) {
+        var now = (new Date()).getTime();
+        // 如果在300ms内触发两次touchend，就阻止默认事件
+        if (now - lastTouchEnd <= 300) {
+               event.preventDefault();
+            }
+        lastTouchEnd = now;
+       }, false);
+};
+//ttzz
+(function(){
+var el = document.createElement("script");
+el.src = "https://sf1-scmcdn-tos.pstatp.com/goofy/ttzz/push.js?502eee36d3dd6b1c3fe026df01698b3fd206c209f2d78dbaa8960ee9beba3def3c226dd771ce6663983b0132bd2e19f8ad6d763d6a6f3fc130742f81a8d5ec9d";
+el.id = "ttzz";
+var s = document.getElementsByTagName("script")[0];
+s.parentNode.insertBefore(el, s);
+})(window)
+
+//zhuyi
+var poemDict = {};
+
+var apiHome = "https://m.gushici.net/";
+
+function SetApiHome(home)
+{
+    apiHome = home;
+}
+
+
+
+function GetJSON(requestUrl, doneFunc, failFunc) {
+  
+    $.ajax({
+        dataType: "json",
+        url: requestUrl,
+        crossDomain: true,
+        
+        data: null,
+        success: doneFunc,
+        error: failFunc
+    });
+}
+
+
+
+
+function ShowInlineComment(id, panel, model, getHtml) {
+    var panelSubId = model + encodeURI(id);
+    ShowInlineNote(panelSubId, panel, function (commentPanel) {
+		var mulu = Math.trunc(id/1000)
+        var url = apiHome + model + "/j" + mulu + "/" + id +".json";
+
+        QueryWithoutCacheSupport(url, commentPanel, function (data, commentPanel) {
+            $('#' + commentPanel).html(getHtml(data));
+            AddCloseLink(commentPanel);
+        });
+    });
+}
+
+function ShowInlineNote(id, panel, func) {
+    var idString = id + "";
+    var commentPanel = panel + "_comment" + "_" + encodeURI(idString.replace(/[/,]/g, "_")).replace(/%/g, "");
+
+    var target = $('#' + commentPanel);
+    if (target.length !== 0) {
+        target.toggle();
+    }
+    else {
+        CreateInlineCommentPanel(panel, commentPanel);
+
+        func(commentPanel);
+    }
+}
+
+
+
+
+function ShowWordNote(id, panel) {
+    ShowInlineComment(id, panel, "json", function (data) {
+        return data.Words[0].Html;
+    });
+}
+
+
+
+function ShowCharOrWordComment(panel, id, path, parser) {
+    var commentPanel = GetCommentPanelFromPath(id, path);
+
+    if ($('#' + commentPanel).length !== 0) {
+        $('#' + commentPanel).toggle();
+    }
+    else {
+        var parts = path.split('/');
+        var clauseIndex = parts[1];
+        var index = parts[3];
+        CreateInlineCommentPanel(panel, commentPanel);
+
+        QueryPoemWithCacheSupport(id, commentPanel, function (poem, commentPanel) {
+            var comment = poem.Clauses[clauseIndex].Comments[index];
+            var charOrWordInfo = JSON.parse(comment.Content);
+            $('#' + commentPanel).html(parser(charOrWordInfo));
+            AddCloseLink(commentPanel);
+        });
+    }
+}
+
+
+     
+function CreateInlineCommentPanel(panel, commentPanel) {
+    $('#' + panel + "_comment").css("display", "block");
+    html = "<div id='" + commentPanel + "' class='poemNote' style='position: relative;'></div>";
+    $('#' + panel + "_comment").prepend(html);
+}
+
+function AddCloseLink(panel) {
+    $('#' + panel).append("<div class='close' onclick='CloseCard(\"" + panel + "\")'>×</div>");
+}
+
+function InternalShowPoemComment(poem, panel) {
+    $('#' + panel).css("position", "relative");
+    $('#' + panel).html(InternalConvertQuote(poem));
+    AddCloseLink(panel);
+
+    $('#' + panel).slideDown();
+}
+
+function QueryPoemWithCacheSupport(id, panel, showFunc) {
+    var url = apiHome + "Poem?jsonType=true&includeLinks=true&key=" + id;
+    QueryWithCacheSupport(url, poemDict, id, panel, function (data, panel) {
+        showFunc(data.ShiData[0], panel);
+    });
+}
+
+
+
+
+
+function QueryWithoutCacheSupport(url, panel, showFunc) {
+    ShowProgress(panel);
+
+    GetJSON(url,
+        function (data) {
+            showFunc(data, panel);
+        },
+        function () {
+            $('#' + panel).html("");
+        });
+}
+
+// Show poem
+
+
+
+
+
+function ShowProgress(panel) {
+    $('#' + panel).html("<span class='inlineComment2'>数据查询中……</span>");
+}
+
+
+
+function AddCloseLink(panel) {
+    $('#' + panel).append("<div class='close' onclick='CloseCard(\"" + panel + "\")'>×</div>");
+}
+function CloseCard(cardId) {
+    $('#' + cardId).fadeOut();
+}
